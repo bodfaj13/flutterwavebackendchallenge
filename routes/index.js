@@ -43,6 +43,12 @@ router.post('/validate-rule', function (req, res, next) {
     // get evaluation result
     let evaluation = runEvaluation(rule, data)
 
+    // check if specified field is of double level
+    let doubleLevel = rule.field.includes('.')
+    let splitLevels = rule.field.split('.')
+    let levelOne = splitLevels[0]
+    let levelTwo = splitLevels[1]
+
     // send out response based on evaluation
     if (evaluation) {
       res.status(200).json({
@@ -51,7 +57,10 @@ router.post('/validate-rule', function (req, res, next) {
         data: {
           error: false,
           field: rule.field,
-          field_value: data[`${rule.field}`],
+          field_value: !doubleLevel ?
+            data[`${rule.field}`]
+            :
+            data[`${levelOne}`][`${levelTwo}`],
           condition: rule.condition,
           condition_value: rule.condition_value
         }
@@ -63,7 +72,10 @@ router.post('/validate-rule', function (req, res, next) {
         data: {
           error: true,
           field: rule.field,
-          field_value: data[`${rule.field}`],
+          field_value: !doubleLevel ?
+            data[`${rule.field}`]
+            :
+            data[`${levelOne}`][`${levelTwo}`],
           condition: rule.condition,
           condition_value: rule.condition_value
         }

@@ -4,12 +4,13 @@ exports.validateField = (value, data) => {
   if (data[`${value}`] === null || data[`${value}`] === undefined) {
     throw new Error(`${value} is required.`)
   }
-  // checks if the value param is a valid object
-  else if (typeof data[`${value}`] !== 'object') {
-    throw new Error(`${value} should be an object.`)
-  } else {
-    return true
+  if (value === 'rule') {
+    // checks if the value param is a valid object
+    if (typeof data[`${value}`] !== 'object') {
+      throw new Error(`${value} should be an object.`)
+    }
   }
+  return true
 }
 
 // validate rule data
@@ -55,22 +56,42 @@ exports.validateSpecifiedField = (rule, data) => {
 
 // runs evaluation based on the rule condition
 exports.runEvaluation = (rule, data) => {
+  let doubleLevel = rule.field.includes('.')
+  let splitLevels = rule.field.split('.')
+  let levelOne = splitLevels[0]
+  let levelTwo = splitLevels[1]
+
   let result
   switch (rule.condition) {
     case 'eq':
-      result = data[`${rule.field}`] === rule.condition_value
+      result = !doubleLevel ?
+        data[`${rule.field}`] === rule.condition_value
+        :
+        data[`${levelOne}`][`${levelTwo}`] === rule.condition_value
       break;
     case 'neq':
-      result = data[`${rule.field}`] !== rule.condition_value
+      result = !doubleLevel ?
+        data[`${rule.field}`] !== rule.condition_value
+        :
+        data[`${levelOne}`][`${levelTwo}`] !== rule.condition_value
       break;
     case 'gt':
-      result = data[`${rule.field}`] > rule.condition_value
+      result = !doubleLevel ?
+        data[`${rule.field}`] > rule.condition_value
+        :
+        data[`${levelOne}`][`${levelTwo}`] > rule.condition_value
       break;
     case 'gte':
-      result = data[`${rule.field}`] >= rule.condition_value
+      result = !doubleLevel ?
+        data[`${rule.field}`] >= rule.condition_value
+        :
+        data[`${levelOne}`][`${levelTwo}`] >= rule.condition_value
       break;
     case 'contains':
-      result = data[`${rule.field}`].toLowerCase().includes(rule.condition_value.toLowerCase())
+      result = !doubleLevel ?
+        data[`${rule.field}`].toLowerCase().includes(rule.condition_value.toLowerCase())
+        :
+        data[`${levelOne}`][`${levelTwo}`].toLowerCase().includes(rule.condition_value.toLowerCase())
       break;
 
     default:
